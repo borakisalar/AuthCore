@@ -17,5 +17,6 @@ namespace StajBackendProject.Interfaces
         bool RemoveRoleFromUser(int userId, int roleId);
         bool ChangePassword(int userId, ChangePasswordDto request);
         bool ChangeEmail(int userId, ChangeEmailDto request);
+        Task<List<UserRoleSpResponseDto>> GetUsersByRoleNameSpAsync(string roleName);
     }
 }

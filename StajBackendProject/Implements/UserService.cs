@@ -23,12 +23,23 @@ namespace StajBackendProject.Implements
 
         public async Task<List<UserResponseDto>> GetAllUsersAsync()
         {
-            var users = await _context.Users
-                .Include(u => u.Roles)
-                .Where(u => u.IsActive == true && u.DeletedAt == null)
+            var rawData = await _context.Database
+                .SqlQuery<UserRoleSpResponseDto>($"EXEC sp_GetAllUsersWithRoles")
                 .ToListAsync();
 
-            return _mapper.Map<List<UserResponseDto>>(users);
+            var groupedUsers = rawData
+                .GroupBy(u => u.Id)
+                .Select(group => new UserResponseDto
+                {
+                    Id = group.Key,
+                    FirstName = group.First().FirstName,
+                    LastName = group.First().LastName,
+                    Email = group.First().Email,
+                    Roles = group.Select(x => x.RoleName).ToList()
+                })
+                .ToList();
+
+            return groupedUsers;
         }
         public async Task<User?> GetUserByIdAsync(int id)
         {
@@ -255,32 +266,33 @@ namespace StajBackendProject.Implements
             var user = _context.Users.Find(userId);
             if (user == null) throw new Exception("User not found.");
 
-            // 1. Güvenlik Kontrolü: Şifre doğru mu? (Senin şifre hashleyici yapını kullanıyoruz)
             bool isPasswordCorrect = _hasher.Verify(request.Password, user.PasswordHash);
             if (!isPasswordCorrect)
             {
                 throw new Exception("Incorrect password. Email update failed.");
             }
 
-            // 2. Çakışma Kontrolü: Bu email başkası tarafından kullanılıyor mu?
             string normalizedNewEmail = request.NewEmail.Trim().ToLowerInvariant();
 
-            // Kendisi hariç (u.Id != userId) aynı emaile sahip başka biri var mı diye bakıyoruz
             bool isEmailTaken = _context.Users.Any(u => u.Email == normalizedNewEmail && u.Id != userId);
             if (isEmailTaken)
             {
                 throw new Exception("This email address is already in use by another account.");
             }
 
-            // 3. Güncelleme İşlemi
             user.Email = normalizedNewEmail;
-
-            // Eğer User modelinde UpdatedAt gibi bir alanın varsa onu da güncelleyebilirsin
-            // user.UpdatedAt = DateTime.UtcNow;
 
             _context.SaveChanges();
 
             return true;
+        }
+        public async Task<List<UserRoleSpResponseDto>> GetUsersByRoleNameSpAsync(string roleName)
+        {
+            var users = await _context.Database
+                .SqlQuery<UserRoleSpResponseDto>($"EXEC sp_GetUsersByRoleName {roleName}")
+                .ToListAsync();
+
+            return users;
         }
     }
 }

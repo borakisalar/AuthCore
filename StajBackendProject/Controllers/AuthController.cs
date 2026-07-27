@@ -61,7 +61,7 @@ namespace StajBackendProject.Controllers
 
         // POST : api/auth/refresh-token
         [HttpPost("refresh-token")]
-        [AllowAnonymous] // Refresh token endpoint should be accessible when the access token is dead
+        [AllowAnonymous]
         public IActionResult RefreshToken([FromBody] RefreshTokenRequestDto request)
         {
             try

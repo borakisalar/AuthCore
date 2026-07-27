@@ -165,5 +165,27 @@ namespace StajBackendProject.Controllers
                 return BadRequest(new { Message = ex.Message });
             }
         }
+
+        // GET : api/users/by-role/{roleName}
+        [HttpGet("by-role/{roleName}")]
+        [Authorize(Roles = "Admin,Manager")]
+        public async Task<IActionResult> GetUsersByRole(string roleName)
+        {
+            try
+            {
+                var users = await _userService.GetUsersByRoleNameSpAsync(roleName);
+
+                if (users == null || !users.Any())
+                {
+                    return NotFound(new { Message = $"'{roleName}' rolüne sahip hiçbir kullanıcı bulunamadı." });
+                }
+
+                return Ok(users);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "Veritabanından bilgiler çekilirken bir hata oluştu.", Details = ex.Message });
+            }
+        }
     }
 }
