@@ -21,17 +21,17 @@ namespace StajBackendProject.Controllers
         // Get : api/Users
         [HttpGet]
         [Authorize(Roles = "Admin,Manager")]
-        public IActionResult GetAllUsers()
+        public async Task<IActionResult> GetAllUsers()
         {
-            var users = _userService.GetAllUsers();
+            var users = await _userService.GetAllUsersAsync();
             return Ok(users);
         }
 
         // Get : api/Users/5
         [HttpGet("{id}")]
-        public IActionResult GetUsersById(int id)
+        public async Task<IActionResult> GetUsersById(int id)
         {
-            var user = _userService.GetUserById(id);
+            var user = await _userService.GetUserByIdAsync(id);
             if (user == null)
             {
                 return NotFound("User not found.");

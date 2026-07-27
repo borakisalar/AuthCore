@@ -21,20 +21,20 @@ namespace StajBackendProject.Implements
             _mapper = mapper;
         }
 
-        public List<UserResponseDto> GetAllUsers()
+        public async Task<List<UserResponseDto>> GetAllUsersAsync()
         {
-            var users = _context.Users
+            var users = await _context.Users
                 .Include(u => u.Roles)
                 .Where(u => u.IsActive == true && u.DeletedAt == null)
-                .ToList();
+                .ToListAsync();
 
             return _mapper.Map<List<UserResponseDto>>(users);
         }
-        public User? GetUserById(int id)
+        public async Task<User?> GetUserByIdAsync(int id)
         {
-            return _context.Users
+            return await _context.Users
                 .Include(u => u.Roles)
-                .SingleOrDefault(u => u.Id == id && u.IsActive == true);
+                .SingleOrDefaultAsync(u => u.Id == id && u.IsActive == true);
         }
         public async Task AddNewUserAsync(AddNewUserDto dto)
         {
@@ -117,13 +117,13 @@ namespace StajBackendProject.Implements
             }
             return true;
         }
-        public LoginResultDto Login(string email, string password)
+        public async Task<LoginResultDto> LoginAsync(string email, string password)
         {
             email = email.Trim().ToLowerInvariant();
 
-            var user = _context.Users
+            var user = await _context.Users
                 .Include(u => u.Roles)
-                .SingleOrDefault(u => u.Email == email && u.IsActive == true);
+                .SingleOrDefaultAsync(u => u.Email == email && u.IsActive == true);
 
             if (user == null || !user.IsActive)
             {
@@ -138,7 +138,7 @@ namespace StajBackendProject.Implements
             {
                 user.LockoutEnd = null;
                 user.FailedLoginAttempts = 0;
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
             }
 
             if (user.LockoutEnd.HasValue && user.LockoutEnd > DateTime.UtcNow)
@@ -161,7 +161,7 @@ namespace StajBackendProject.Implements
                     user.FailedLoginAttempts = 0;
                 }
 
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
 
                 return new LoginResultDto
                 {
@@ -181,7 +181,7 @@ namespace StajBackendProject.Implements
             user.RefreshToken = refreshToken;
             user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
 
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             string token = _tokenService.GenerateJwtToken(user);
 
@@ -245,6 +245,38 @@ namespace StajBackendProject.Implements
 
             user.UpdatedAt = DateTime.UtcNow;
             user.PasswordLastChangedAt = DateTime.UtcNow;
+
+            _context.SaveChanges();
+
+            return true;
+        }
+        public bool ChangeEmail(int userId, ChangeEmailDto request)
+        {
+            var user = _context.Users.Find(userId);
+            if (user == null) throw new Exception("User not found.");
+
+            // 1. Güvenlik Kontrolü: Şifre doğru mu? (Senin şifre hashleyici yapını kullanıyoruz)
+            bool isPasswordCorrect = _hasher.Verify(request.Password, user.PasswordHash);
+            if (!isPasswordCorrect)
+            {
+                throw new Exception("Incorrect password. Email update failed.");
+            }
+
+            // 2. Çakışma Kontrolü: Bu email başkası tarafından kullanılıyor mu?
+            string normalizedNewEmail = request.NewEmail.Trim().ToLowerInvariant();
+
+            // Kendisi hariç (u.Id != userId) aynı emaile sahip başka biri var mı diye bakıyoruz
+            bool isEmailTaken = _context.Users.Any(u => u.Email == normalizedNewEmail && u.Id != userId);
+            if (isEmailTaken)
+            {
+                throw new Exception("This email address is already in use by another account.");
+            }
+
+            // 3. Güncelleme İşlemi
+            user.Email = normalizedNewEmail;
+
+            // Eğer User modelinde UpdatedAt gibi bir alanın varsa onu da güncelleyebilirsin
+            // user.UpdatedAt = DateTime.UtcNow;
 
             _context.SaveChanges();
 

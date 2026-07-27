@@ -42,9 +42,9 @@ namespace StajBackendProject.Controllers
         // POST : api/auth/login
         [HttpPost("login")]
         [AllowAnonymous]
-        public IActionResult Login([FromBody] LoginDto request)
+        public async Task<IActionResult> Login([FromBody] LoginDto request)
         {
-            var result = _userService.Login(request.Email, request.Password);
+            var result = await _userService.LoginAsync(request.Email, request.Password);
 
             if (result.Success)
             {
@@ -72,6 +72,30 @@ namespace StajBackendProject.Controllers
             catch (Exception ex)
             {
                 return Unauthorized(new { Message = ex.Message });
+            }
+        }
+
+        // POST : api/auth/change-email
+        [HttpPost("change-email")]
+        [Authorize]
+        public IActionResult ChangeEmail([FromBody] ChangeEmailDto request)
+        {
+            try
+            {
+                var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int userId))
+                {
+                    return Unauthorized(new { Message = "Invalid or expired token." });
+                }
+
+                _userService.ChangeEmail(userId, request);
+
+                return Ok(new { Message = "Email address successfully updated." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
             }
         }
 
