@@ -60,7 +60,7 @@ namespace StajBackendProject.Implements
 
         public TokenResponseDto RefreshToken(RefreshTokenRequestDto request)
         {
-            var user = _context.Users.SingleOrDefault(u => u.RefreshToken == request.RefreshToken);
+            var user = _context.Users.Include(u => u.Roles).SingleOrDefault(u => u.RefreshToken == request.RefreshToken);
 
             if (user == null || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
             {
