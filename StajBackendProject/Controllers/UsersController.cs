@@ -44,19 +44,8 @@ namespace StajBackendProject.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateUserByAdmin([FromBody] AddNewUserDto dto)
         {
-            try
-            {
-                await _userService.AddNewUserAsync(dto);
-                return Ok("User successfully added.");
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(ex.Message);
-            }
-            catch 
-            {
-                return StatusCode(500, "An error occurred on the server side.");
-            }
+            await _userService.AddNewUserAsync(dto);
+            return Ok("User successfully added.");
         }
 
         // Delete : api/Users/5
@@ -139,15 +128,8 @@ namespace StajBackendProject.Controllers
         [Authorize(Roles = "Admin")]
         public IActionResult AssignRole(int id, [FromBody] AssignRoleDto request)
         {
-            try
-            {
-                _userService.AssignRoleToUser(id, request.RoleId);
-                return Ok(new { Message = "Role successfully assigned to the user." });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { Message = ex.Message });
-            }
+            _userService.AssignRoleToUser(id, request.RoleId);
+            return Ok(new { Message = "Role successfully assigned to the user." });
         }
 
         // DELETE api/users/{id}/roles/{roleId}
@@ -155,15 +137,8 @@ namespace StajBackendProject.Controllers
         [Authorize(Roles = "Admin")]
         public IActionResult RemoveRole(int id, int roleId)
         {
-            try
-            {
-                _userService.RemoveRoleFromUser(id, roleId);
-                return Ok(new { Message = "Role successfully removed from the user." });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { Message = ex.Message });
-            }
+            _userService.RemoveRoleFromUser(id, roleId);
+            return Ok(new { Message = "Role successfully removed from the user." });
         }
 
         // GET : api/users/by-role/{roleName}
@@ -171,21 +146,14 @@ namespace StajBackendProject.Controllers
         [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> GetUsersByRole(string roleName)
         {
-            try
-            {
-                var users = await _userService.GetUsersByRoleNameSpAsync(roleName);
+            var users = await _userService.GetUsersByRoleNameSpAsync(roleName);
 
-                if (users == null || !users.Any())
-                {
-                    return NotFound(new { Message = $"'{roleName}' rolüne sahip hiçbir kullanıcı bulunamadı." });
-                }
-
-                return Ok(users);
-            }
-            catch (Exception ex)
+            if (users == null || !users.Any())
             {
-                return StatusCode(500, new { Message = "Veritabanından bilgiler çekilirken bir hata oluştu.", Details = ex.Message });
+                return NotFound(new { Message = $"No users with the role {roleName} were found." });
             }
+
+            return Ok(users);
         }
     }
 }

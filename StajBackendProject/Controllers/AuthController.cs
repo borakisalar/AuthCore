@@ -24,19 +24,8 @@ namespace StajBackendProject.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Register([FromBody] AddNewUserDto dto)
         {
-            try
-            {
-                await _userService.AddNewUserAsync(dto);
-                return Ok(new { Message = "User successfully registered." });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(new { Message = ex.Message });
-            }
-            catch
-            {
-                return StatusCode(500, new { Message = "An error occurred on the server side." });
-            }
+            await _userService.AddNewUserAsync(dto);
+            return Ok(new { Message = "User successfully registered." });
         }
 
         // POST : api/auth/login
@@ -64,15 +53,8 @@ namespace StajBackendProject.Controllers
         [AllowAnonymous]
         public IActionResult RefreshToken([FromBody] RefreshTokenRequestDto request)
         {
-            try
-            {
-                var tokens = _tokenService.RefreshToken(request);
-                return Ok(tokens);
-            }
-            catch (Exception ex)
-            {
-                return Unauthorized(new { Message = ex.Message });
-            }
+            var tokens = _tokenService.RefreshToken(request);
+            return Ok(tokens);
         }
 
         // POST : api/auth/change-email
@@ -80,47 +62,33 @@ namespace StajBackendProject.Controllers
         [Authorize]
         public IActionResult ChangeEmail([FromBody] ChangeEmailDto request)
         {
-            try
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int userId))
             {
-                var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-                if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int userId))
-                {
-                    return Unauthorized(new { Message = "Invalid or expired token." });
-                }
-
-                _userService.ChangeEmail(userId, request);
-
-                return Ok(new { Message = "Email address successfully updated." });
+                return Unauthorized(new { Message = "Invalid or expired token." });
             }
-            catch (Exception ex)
-            {
-                return BadRequest(new { Message = ex.Message });
-            }
+
+            _userService.ChangeEmail(userId, request);
+
+            return Ok(new { Message = "Email address successfully updated." });
         }
 
         // POST : api/auth/change-password
         [HttpPost("change-password")]
-        [Authorize] // Only logged-in users can change their password
+        [Authorize]
         public IActionResult ChangePassword([FromBody] ChangePasswordDto request)
         {
-            try
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int userId))
             {
-                var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-                if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int userId))
-                {
-                    return Unauthorized(new { Message = "Invalid or expired token." });
-                }
-
-                _userService.ChangePassword(userId, request);
-
-                return Ok(new { Message = "Password changed successfully." });
+                return Unauthorized(new { Message = "Invalid or expired token." });
             }
-            catch (Exception ex)
-            {
-                return BadRequest(new { Message = ex.Message });
-            }
+
+            _userService.ChangePassword(userId, request);
+
+            return Ok(new { Message = "Password changed successfully." });
         }
     }
 }
