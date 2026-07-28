@@ -25,6 +25,15 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 builder.Services.AddDbContext<UsersContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("UsersContext")));
+builder.Services.AddDbContext<AdventureWorksContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("AdventureWorksConnection")));
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = "localhost:6379";
+    options.InstanceName = "StajProject_";
+});
+
+builder.Services.AddScoped<AdventureWorksService>();
+
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
@@ -37,10 +46,6 @@ builder.Services.AddAutoMapper(config =>
 {
     config.AddProfile<UserProfile>();
     config.AddProfile<RoleProfile>();
-});
-builder.Services.AddAutoMapper(config =>
-{
-    config.AddProfile<UserProfile>();
 });
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
