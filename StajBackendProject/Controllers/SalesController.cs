@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using StajBackendProject.Implements;
+using StajBackendProject.Interfaces;
 
 namespace StajBackendProject.Controllers
 {
@@ -7,9 +8,9 @@ namespace StajBackendProject.Controllers
     [ApiController]
     public class SalesController : ControllerBase
     {
-        private readonly AdventureWorksService _salesService;
+        private readonly IAdventureWorksService _salesService;
 
-        public SalesController(AdventureWorksService salesService)
+        public SalesController(IAdventureWorksService salesService)
         {
             _salesService = salesService;
         }
