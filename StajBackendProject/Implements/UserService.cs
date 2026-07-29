@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Net;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using StajBackendProject.Factories;
 using StajBackendProject.Interfaces;
@@ -128,7 +129,7 @@ namespace StajBackendProject.Implements
             }
             return true;
         }
-        public async Task<LoginResultDto> LoginAsync(string email, string password)
+        public async Task<LoginResultDto> LoginAsync(string email, string password, string? ipAddress = null, string? deviceName = null)
         {
             email = email.Trim().ToLowerInvariant();
 
@@ -184,17 +185,27 @@ namespace StajBackendProject.Implements
                 };
             }
 
+            string token = _tokenService.GenerateJwtToken(user);
+            string refreshToken = _tokenService.GenerateRefreshToken();
+
+            var newSession = new UserSession
+            {
+                UserId = user.Id,
+                RefreshToken = refreshToken,
+                ExpiryDate = DateTime.UtcNow.AddDays(30),
+                IpAddress = ipAddress,
+                DeviceName = deviceName ?? "Unknown Device",
+                IsRevoked = false,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.UserSessions.Add(newSession);
+
             user.FailedLoginAttempts = 0;
             user.LockoutEnd = null;
             user.LastLoginDate = DateTime.UtcNow;
 
-            string refreshToken = _tokenService.GenerateRefreshToken();
-            user.RefreshToken = refreshToken;
-            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
-
             await _context.SaveChangesAsync();
-
-            string token = _tokenService.GenerateJwtToken(user);
 
             return new LoginResultDto
             {
@@ -293,6 +304,45 @@ namespace StajBackendProject.Implements
                 .ToListAsync();
 
             return users;
+        }
+
+        public async Task<List<UserSession>> GetActiveSessionsAsync(int userId)
+        {
+            return await _context.UserSessions
+                .Where(s => s.UserId == userId && !s.IsRevoked && s.ExpiryDate > DateTime.UtcNow)
+                .OrderByDescending(s => s.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<bool> RevokeSessionAsync(int userId, int sessionId)
+        {
+            var session = await _context.UserSessions
+                .FirstOrDefaultAsync(s => s.Id == sessionId && s.UserId == userId);
+
+            if (session == null || session.IsRevoked) return false;
+
+            session.IsRevoked = true;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> LogoutSessionAsync(string refreshToken)
+        {
+            var session = await _context.UserSessions
+                .FirstOrDefaultAsync(s => s.RefreshToken == refreshToken);
+
+            if (session == null) return false;
+
+            session.IsRevoked = true;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<UserSession?> GetCurrentSessionAsync(string refreshToken)
+        {
+            return await _context.UserSessions
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.RefreshToken == refreshToken && !s.IsRevoked && s.ExpiryDate > DateTime.UtcNow);
         }
     }
 }

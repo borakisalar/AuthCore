@@ -60,19 +60,33 @@ namespace StajBackendProject.Implements
 
         public TokenResponseDto RefreshToken(RefreshTokenRequestDto request)
         {
-            var user = _context.Users.Include(u => u.Roles).SingleOrDefault(u => u.RefreshToken == request.RefreshToken);
+            var session = _context.UserSessions
+                .Include(s => s.User)
+                .ThenInclude(u => u.Roles)
+                .SingleOrDefault(s => s.RefreshToken == request.RefreshToken && !s.IsRevoked);
 
-            if (user == null || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+            if (session == null || session.ExpiryDate <= DateTime.UtcNow)
             {
                 throw new Exception("Invalid or expired refresh token. Please login again.");
             }
 
-            var newAccessToken = GenerateJwtToken(user);
+            var newAccessToken = GenerateJwtToken(session.User);
             var newRefreshToken = GenerateRefreshToken();
 
-            user.RefreshToken = newRefreshToken;
-            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+            session.IsRevoked = true;
 
+            var newSession = new UserSession
+            {
+                UserId = session.UserId,
+                RefreshToken = newRefreshToken,
+                ExpiryDate = DateTime.UtcNow.AddDays(30),
+                IpAddress = session.IpAddress,
+                DeviceName = session.DeviceName,
+                IsRevoked = false,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.UserSessions.Add(newSession);
             _context.SaveChanges();
 
             return new TokenResponseDto

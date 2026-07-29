@@ -33,7 +33,10 @@ namespace StajBackendProject.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginDto request)
         {
-            var result = await _userService.LoginAsync(request.Email, request.Password);
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+            var deviceName = HttpContext.Request.Headers["User-Agent"].ToString();
+
+            var result = await _userService.LoginAsync(request.Email, request.Password, ipAddress, deviceName);
 
             if (result.Success)
             {
@@ -89,6 +92,72 @@ namespace StajBackendProject.Controllers
             _userService.ChangePassword(userId, request);
 
             return Ok(new { Message = "Password changed successfully." });
+        }
+
+        // GET: api/auth/session
+        [HttpGet("session")]
+        [Authorize]
+        public async Task<IActionResult> GetCurrentSession([FromQuery] string refreshToken)
+        {
+            if (string.IsNullOrWhiteSpace(refreshToken))
+            {
+                return BadRequest(new { Message = "Refresh token parameter is required." });
+            }
+
+            var session = await _userService.GetCurrentSessionAsync(refreshToken);
+
+            if (session == null)
+            {
+                return NotFound(new { Message = "No active session was found or the session has expired." });
+            }
+
+            return Ok(new
+            {
+                session.Id,
+                session.UserId,
+                session.DeviceName,
+                session.IpAddress,
+                session.CreatedAt,
+                session.ExpiryDate
+            });
+        }
+
+        // DELETE: api/auth/session
+        [HttpDelete("session")]
+        [AllowAnonymous]
+        public async Task<IActionResult> Logout([FromBody] RefreshTokenRequestDto request)
+        {
+            await _userService.LogoutSessionAsync(request.RefreshToken);
+            return Ok(new { Message = "Session was successfully revoked." });
+        }
+
+        // GET: api/auth/sessions
+        [HttpGet("sessions")]
+        [Authorize]
+        public async Task<IActionResult> GetSessions()
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var sessions = await _userService.GetActiveSessionsAsync(userId);
+
+            return Ok(sessions.Select(s => new {
+                s.Id,
+                s.DeviceName,
+                s.IpAddress,
+                s.CreatedAt,
+                s.ExpiryDate
+            }));
+        }
+
+        // DELETE: api/auth/sessions/{id}
+        [HttpDelete("sessions/{id}")]
+        [Authorize]
+        public async Task<IActionResult> RevokeSession(int id)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var success = await _userService.RevokeSessionAsync(userId, id);
+
+            if (!success) return NotFound(new { Message = "Session not found or already cancelled." });
+            return Ok(new { Message = "Session was successfully terminated." });
         }
     }
 }
