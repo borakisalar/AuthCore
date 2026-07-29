@@ -1,60 +1,87 @@
 ﻿using System.Net;
+using System.Security.Claims;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+using Serilog;
+using StajBackendProject.Models;
 
 namespace StajBackendProject.Middlewares
 {
     public class ExceptionHandlingMiddleware
     {
         private readonly RequestDelegate _next;
-        private readonly ILogger<ExceptionHandlingMiddleware> _logger;
 
-        public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
+        public ExceptionHandlingMiddleware(RequestDelegate next)
         {
             _next = next;
-            _logger = logger;
-        }   
+        }
 
-        public async Task InvokeAsync(HttpContext httpContext)
+        public async Task InvokeAsync(HttpContext context)
         {
             try
             {
-                await _next(httpContext);
+                await _next(context);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An unexpected error occurred in the system.: {Message}. Detail: {StackTrace}", ex.Message, ex.StackTrace);
-                await HandleExceptionAsync(httpContext, ex);
+                var userIdString = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var userEmail = context.User.FindFirstValue(ClaimTypes.Email) ?? context.User.FindFirstValue(ClaimTypes.Name);
+
+                int? userId = null;
+                if (int.TryParse(userIdString, out int parsedId))
+                {
+                    userId = parsedId;
+                }
+
+                var statusCode = (int)HttpStatusCode.InternalServerError;
+                if (ex is InvalidOperationException) statusCode = (int)HttpStatusCode.Conflict;
+                else if (ex is ArgumentException) statusCode = (int)HttpStatusCode.BadRequest;
+                else if (ex is UnauthorizedAccessException) statusCode = (int)HttpStatusCode.Unauthorized;
+
+                await LogErrorToDatabaseAsync(context, userId, userEmail, ex, statusCode);
+
+                Log.Error(ex, "Error in HTTP {Method} {Path} endpoint! User ID: {UserId}, Email: {UserEmail}",
+                    context.Request.Method, context.Request.Path, userId ?? 0, userEmail ?? "Anonim");
+
+                context.Response.ContentType = "application/json";
+                context.Response.StatusCode = statusCode;
+
+                var response = new
+                {
+                    StatusCode = statusCode,
+                    Message = ex.Message,
+                    Detail = "A system error occurred and it was reported to the technical team."
+                };
+
+                await context.Response.WriteAsync(JsonSerializer.Serialize(response));
             }
         }
 
-        private static Task HandleExceptionAsync(HttpContext context, Exception exception)
+        private async Task LogErrorToDatabaseAsync(HttpContext context, int? userId, string? userEmail, Exception ex, int statusCode)
         {
-            context.Response.ContentType = "application/json";
-
-            var statusCode = exception switch
+            try
             {
-                InvalidOperationException => (int)HttpStatusCode.Conflict,          // 409
-                ArgumentException => (int)HttpStatusCode.BadRequest,                // 400
-                UnauthorizedAccessException => (int)HttpStatusCode.Unauthorized,    // 401
-                _ => (int)HttpStatusCode.InternalServerError                        // 500
-            };
+                var dbContext = context.RequestServices.GetRequiredService<UsersContext>();
 
-            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                var errorLog = new ErrorLog
+                {
+                    UserId = userId,
+                    UserEmail = userEmail,
+                    Path = context.Request.Path,
+                    Method = context.Request.Method,
+                    ExceptionMessage = ex.Message,
+                    StackTrace = ex.StackTrace,
+                    StatusCode = statusCode,
+                    Timestamp = DateTime.UtcNow
+                };
 
-            string message = exception.Message;
-
-            if (statusCode == (int)HttpStatusCode.InternalServerError)
-            {
-                message = "An unexpected error occurred on the server side. Please try again later.";
+                dbContext.ErrorLogs.Add(errorLog);
+                await dbContext.SaveChangesAsync();
             }
-
-            var response = new
+            catch (Exception dbEx)
             {
-                Message = "An error occurred on the server side.",
-                Error = exception.Message
-            };
-
-            return context.Response.WriteAsync(JsonSerializer.Serialize(response));
+                Log.Fatal(dbEx, "The error could not be saved to the database!");
+            }
         }
     }
 }

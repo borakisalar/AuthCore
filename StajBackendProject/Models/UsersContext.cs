@@ -7,6 +7,7 @@ namespace StajBackendProject.Models
         public UsersContext(DbContextOptions<UsersContext> options):base(options) { }
         public DbSet<User> Users { get; set; } = null;
         public DbSet<Role> Roles { get; set; }
+        public DbSet<ErrorLog> ErrorLogs { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

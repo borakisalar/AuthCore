@@ -37,6 +37,46 @@ namespace StajBackendProject.Migrations
                     b.ToTable("RoleUser");
                 });
 
+            modelBuilder.Entity("StajBackendProject.Models.ErrorLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ExceptionMessage")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Method")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("StackTrace")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("StatusCode")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserEmail")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ErrorLogs");
+                });
+
             modelBuilder.Entity("StajBackendProject.Models.Role", b =>
                 {
                     b.Property<int>("Id")
