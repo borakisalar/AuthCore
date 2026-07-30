@@ -1,6 +1,8 @@
 using Serilog;
 using StajBackendProject.Extensions;
 using StajBackendProject.Helpers;
+using StajBackendProject.Implements;
+using StajBackendProject.Interfaces;
 using StajBackendProject.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +19,7 @@ builder.Services.AddDatabaseAndCacheServices(builder.Configuration);
 builder.Services.AddApplicationServices();
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddSwaggerConfiguration();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 var app = builder.Build();
 

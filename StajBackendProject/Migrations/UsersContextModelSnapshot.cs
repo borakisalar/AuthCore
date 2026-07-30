@@ -158,10 +158,6 @@ namespace StajBackendProject.Migrations
                     b.Property<DateTime?>("PasswordLastChangedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("PhoneNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -169,10 +165,6 @@ namespace StajBackendProject.Migrations
 
                     b.HasIndex("Email")
                         .IsUnique();
-
-                    b.HasIndex("PhoneNumber")
-                        .IsUnique()
-                        .HasFilter("[PhoneNumber] IS NOT NULL AND [PhoneNumber] <> ''");
 
                     b.ToTable("Users");
                 });

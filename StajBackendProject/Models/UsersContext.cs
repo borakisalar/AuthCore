@@ -27,11 +27,6 @@ namespace StajBackendProject.Models
                 .HasIndex(u => u.Email)
                 .IsUnique();
 
-            modelBuilder.Entity<User>()
-                .HasIndex(u => u.PhoneNumber)
-                .IsUnique()
-                .HasFilter("[PhoneNumber] IS NOT NULL AND [PhoneNumber] <> ''");
-
             modelBuilder.Entity<Role>().HasData(
                 new Role { Id = 1, Name = "Admin" },
                 new Role { Id = 2, Name = "User" },

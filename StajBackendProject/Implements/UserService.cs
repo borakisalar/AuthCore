@@ -1,7 +1,5 @@
-﻿using System.Net;
-using AutoMapper;
+﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using StajBackendProject.Factories;
 using StajBackendProject.Interfaces;
 using StajBackendProject.Models;
 using StajBackendProject.Models.Dto;
@@ -14,12 +12,14 @@ namespace StajBackendProject.Implements
         private readonly IPasswordHasher _hasher;
         private readonly ITokenService _tokenService;
         private readonly IMapper _mapper;
-        public UserService(UsersContext context, IPasswordHasher hasher, ITokenService tokenService, IMapper mapper)
+        private readonly IEmailService _emailService;
+        public UserService(UsersContext context, IPasswordHasher hasher, ITokenService tokenService, IMapper mapper, IEmailService emailService)
         {
             _context = context;
             _hasher = hasher;
             _tokenService = tokenService;
             _mapper = mapper;
+            _emailService = emailService;
         }
 
         public async Task<List<UserResponseDto>> GetAllUsersAsync()
@@ -52,8 +52,7 @@ namespace StajBackendProject.Implements
         {
             string normalizedEmail = dto.Email.Trim().ToLowerInvariant();
 
-            bool isUserExist = await _context.Users.AnyAsync(u => u.Email == normalizedEmail
-            || (!string.IsNullOrWhiteSpace(dto.PhoneNumber) && u.PhoneNumber == dto.PhoneNumber));
+            bool isUserExist = await _context.Users.AnyAsync(u => u.Email == normalizedEmail);
 
             if (isUserExist)
             {
@@ -70,7 +69,6 @@ namespace StajBackendProject.Implements
                 IsActive = true,
                 InsertDate = DateTime.UtcNow,
                 PasswordHash = _hasher.Hash(dto.Password),
-                PhoneNumber = dto.PhoneNumber,
                 Roles = new List<Role>()
             };
 
@@ -82,11 +80,11 @@ namespace StajBackendProject.Implements
             _context.Users.Add(newUser);
             await _context.SaveChangesAsync();
 
-            NotificationFactory notificationFactory = new NotificationFactory();
-
-            INotificationService notifier = notificationFactory.CreateNotification("email");
-
-            notifier.Send(dto.Email, $"Welcome {dto.FirstName}! Registration successfully completed.");
+            _emailService.SendEmail(
+            dto.Email,
+            "Staj Project - Welcome! 🎉",
+            $"Welcome {dto.FirstName}! Registration successfully completed."
+            );
         }
         public bool DeleteUser(int id)
         {

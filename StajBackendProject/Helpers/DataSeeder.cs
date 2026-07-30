@@ -38,7 +38,6 @@ namespace StajBackendProject.Helpers
                     FirstName = "System",
                     LastName = "Admin",
                     Email = adminEmail,
-                    PhoneNumber = "05555555555",
                     IsActive = true,
                     InsertDate = DateTime.UtcNow,
                     PasswordHash = hasher.Hash("AdminPassword123!"),
