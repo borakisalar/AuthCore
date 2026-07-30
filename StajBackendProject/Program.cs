@@ -19,7 +19,6 @@ builder.Services.AddDatabaseAndCacheServices(builder.Configuration);
 builder.Services.AddApplicationServices();
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddSwaggerConfiguration();
-builder.Services.AddScoped<IEmailService, EmailService>();
 
 var app = builder.Build();
 

@@ -1,7 +1,9 @@
-﻿using System.Text;
+﻿using System.Reflection;
+using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using StajBackendProject.Implements;
@@ -41,6 +43,7 @@ namespace StajBackendProject.Extensions
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IRoleService, RoleService>();
+            services.AddScoped<IEmailService, EmailService>();
 
             services.AddScoped<IAdventureWorksService, AdventureWorksService>();
 
@@ -81,6 +84,9 @@ namespace StajBackendProject.Extensions
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "StajBackendProject API", Version = "v1" });
 
+                var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     Name = "Authorization",
@@ -88,7 +94,7 @@ namespace StajBackendProject.Extensions
                     Scheme = "Bearer",
                     BearerFormat = "JWT",
                     In = ParameterLocation.Header,
-                    Description = "Lütfen sadece kopyaladığınız token'ı kutuya yapıştırın ('Bearer' yazmanıza gerek yok)."
+                    Description = "Please simply paste the token you copied into the box (you don't need to type 'Bearer'). "
                 });
 
                 c.AddSecurityRequirement(new OpenApiSecurityRequirement
