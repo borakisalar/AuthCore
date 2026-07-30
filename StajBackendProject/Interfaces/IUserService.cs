@@ -25,5 +25,7 @@ namespace StajBackendProject.Interfaces
         Task<bool> VerifyEmailAsync(string token);
         Task<bool> ForgotPasswordAsync(string email);
         Task<bool> ResetPasswordAsync(ResetPasswordDto request);
+        Task<bool> EmailChangeAsync(int userId, ChangeEmailDto request);
+        Task<bool> VerifyEmailChangeAsync(string token);
     }
 }

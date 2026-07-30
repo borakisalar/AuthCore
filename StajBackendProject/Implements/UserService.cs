@@ -400,7 +400,7 @@ namespace StajBackendProject.Implements
                 <p>A password reset request has been submitted for your account. You can click the link below to reset your password:</p>
                 <p><a href='{resetUrl}'>Reset password</a></p>
                 <br>
-                <p><b>Not:</b> This link is only valid for <b>15 minutes</b>. If you did not make this request, you can ignore this email.</p>";
+                <p><b>Note:</b> This link is only valid for <b>15 minutes</b>. If you did not make this request, you can ignore this email.</p>";
 
             _emailService.SendEmail(user.Email, emailSubject, emailBody);
 
@@ -425,6 +425,86 @@ namespace StajBackendProject.Implements
             user.PasswordResetTokenExpiry = null;
             user.UpdatedAt = DateTime.UtcNow;
             user.PasswordLastChangedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+        public async Task<bool> EmailChangeAsync(int userId, ChangeEmailDto request)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null || !user.IsActive)
+            {
+                throw new Exception("User not found or inactive.");
+            }
+
+            bool isPasswordCorrect = _hasher.Verify(request.Password, user.PasswordHash);
+            if (!isPasswordCorrect)
+            {
+                throw new Exception("Incorrect password. Email update failed.");
+            }
+
+            string normalizedNewEmail = request.NewEmail.Trim().ToLowerInvariant();
+
+            if (user.Email == normalizedNewEmail)
+            {
+                throw new Exception("New email address cannot be the same as the current email address.");
+            }
+
+            bool isEmailTaken = await _context.Users.AnyAsync(u => u.Email == normalizedNewEmail && u.Id != userId);
+            if (isEmailTaken)
+            {
+                throw new Exception("This email address is already in use by another account.");
+            }
+
+            string changeToken = _tokenService.GenerateEmailChangeToken();
+            user.PendingNewEmail = normalizedNewEmail;
+            user.EmailChangeToken = changeToken;
+            user.EmailChangeTokenExpiry = DateTime.UtcNow.AddMinutes(15);
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            string verifyUrl = $"https://localhost:7123/api/auth/verify-email-change?token={changeToken}";
+
+            string emailSubject = "Staj Projesi - Confirm Email Change 📧";
+            string emailBody = $@"
+                <h3>Hello {user.FirstName},</h3>
+                <p>You have submitted a request to change your account's email address to this address.</p>
+                <p>To confirm the email change, click the link below:</p>
+                <p><a href='{verifyUrl}'>Change Email</a></p>
+                <br>
+                <p><small><b>Note:</b>This link is valid for 15 minutes. If you did not make this request, please change your account password immediately.</small></p>";
+
+            _emailService.SendEmail(normalizedNewEmail, emailSubject, emailBody);
+
+            return true;
+        }
+
+        public async Task<bool> VerifyEmailChangeAsync(string token)
+        {
+            var user = await _context.Users.SingleOrDefaultAsync(u =>
+                u.EmailChangeToken == token &&
+                u.EmailChangeTokenExpiry > DateTime.UtcNow &&
+                u.IsActive == true);
+
+            if (user == null || string.IsNullOrWhiteSpace(user.PendingNewEmail))
+            {
+                return false;
+            }
+
+            bool isEmailTaken = await _context.Users.AnyAsync(u => u.Email == user.PendingNewEmail && u.Id != user.Id);
+            if (isEmailTaken)
+            {
+                return false;
+            }
+
+            user.Email = user.PendingNewEmail;
+
+            user.PendingNewEmail = null;
+            user.EmailChangeToken = null;
+            user.EmailChangeTokenExpiry = null;
+            user.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 

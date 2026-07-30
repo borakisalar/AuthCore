@@ -126,6 +126,12 @@ namespace StajBackendProject.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("EmailChangeToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("EmailChangeTokenExpiry")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("EmailVerificationToken")
                         .HasColumnType("nvarchar(max)");
 
@@ -172,6 +178,9 @@ namespace StajBackendProject.Migrations
 
                     b.Property<DateTime?>("PasswordResetTokenExpiry")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("PendingNewEmail")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");

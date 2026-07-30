@@ -13,6 +13,9 @@
         public DateTime? EmailVerificationTokenExpiry { get; set; }
         public string? PasswordResetToken { get; set; }
         public DateTime? PasswordResetTokenExpiry { get; set; }
+        public string? PendingNewEmail { get; set; }
+        public string? EmailChangeToken { get; set; }
+        public DateTime? EmailChangeTokenExpiry { get; set; }
 
         public ICollection<Role> Roles { get; set; }
         public int FailedLoginAttempts { get; set; }

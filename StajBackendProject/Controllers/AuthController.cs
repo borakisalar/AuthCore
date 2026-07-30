@@ -63,7 +63,7 @@ namespace StajBackendProject.Controllers
         // POST : api/auth/change-email
         [HttpPost("change-email")]
         [Authorize]
-        public IActionResult ChangeEmail([FromBody] ChangeEmailDto request)
+        public async Task<IActionResult> ChangeEmail([FromBody] ChangeEmailDto request)
         {
             var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -72,9 +72,29 @@ namespace StajBackendProject.Controllers
                 return Unauthorized(new { Message = "Invalid or expired token." });
             }
 
-            _userService.ChangeEmail(userId, request);
+            await _userService.EmailChangeAsync(userId, request);
 
-            return Ok(new { Message = "Email address successfully updated." });
+            return Ok(new { Message = "A verification link has been sent to your new email address. Please confirm the link to your new address to complete the change." });
+        }
+
+        // GET : api/auth/verify-email-change
+        [HttpGet("verify-email-change")]
+        [AllowAnonymous]
+        public async Task<IActionResult> VerifyEmailChange([FromQuery] string token)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return BadRequest(new { Message = "A verification token is required." });
+            }
+
+            var success = await _userService.VerifyEmailChangeAsync(token);
+
+            if (!success)
+            {
+                return BadRequest(new { Message = "Invalid or expired email change token!" });
+            }
+
+            return Ok(new { Message = "Your email address has been successfully updated! You can now log in with your new email address." });
         }
 
         // POST: api/auth/forgot-password
