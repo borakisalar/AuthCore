@@ -91,7 +91,7 @@ namespace StajBackendProject.Implements
             string emailBody = $@"
                 <h3>Hello {dto.FirstName},</h3>
                 <p>Welcome to our community! To activate your account, please click the link below:</p>
-                <p><a href='{verificationUrl}' style='padding: 10px 15px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;'>Activate my account</a></p>
+                <p><a href='{verificationUrl}'>Activate my account</a></p>
                 <br>
                 <p><small>This link is valid for 24 hours. If the button doesn't work, paste this link into your browser:<br>{verificationUrl}</small></p>";
 
@@ -371,6 +371,63 @@ namespace StajBackendProject.Implements
             user.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> ForgotPasswordAsync(string email)
+        {
+            string normalizedEmail = email.Trim().ToLowerInvariant();
+
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == normalizedEmail && u.IsActive == true);
+
+            if (user == null)
+            {
+                return false;
+            }
+
+            string resetToken = _tokenService.GeneratePasswordResetToken();
+            user.PasswordResetToken = resetToken;
+            user.PasswordResetTokenExpiry = DateTime.UtcNow.AddMinutes(15);
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            string resetUrl = $"https://localhost:7123/api/auth/reset-password?token={resetToken}";
+
+            string emailSubject = "Backend Project - Password Reset Request 🔑";
+            string emailBody = $@"
+                <h3>Hello {user.FirstName},</h3>
+                <p>A password reset request has been submitted for your account. You can click the link below to reset your password:</p>
+                <p><a href='{resetUrl}'>Reset password</a></p>
+                <br>
+                <p><b>Not:</b> This link is only valid for <b>15 minutes</b>. If you did not make this request, you can ignore this email.</p>";
+
+            _emailService.SendEmail(user.Email, emailSubject, emailBody);
+
+            return true;
+        }
+
+        public async Task<bool> ResetPasswordAsync(ResetPasswordDto request)
+        {
+            var user = await _context.Users.SingleOrDefaultAsync(u =>
+                u.PasswordResetToken == request.Token &&
+                u.PasswordResetTokenExpiry > DateTime.UtcNow &&
+                u.IsActive == true);
+
+            if (user == null)
+            {
+                return false;
+            }
+
+            user.PasswordHash = _hasher.Hash(request.NewPassword);
+
+            user.PasswordResetToken = null;
+            user.PasswordResetTokenExpiry = null;
+            user.UpdatedAt = DateTime.UtcNow;
+            user.PasswordLastChangedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
             return true;
         }
     }

@@ -103,5 +103,13 @@ namespace StajBackendProject.Implements
             rng.GetBytes(randomNumber);
             return Convert.ToHexString(randomNumber);
         }
+
+        public string GeneratePasswordResetToken()
+        {
+            var randomNumber = new byte[32];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomNumber);
+            return Convert.ToHexString(randomNumber);
+        }
     }
 }

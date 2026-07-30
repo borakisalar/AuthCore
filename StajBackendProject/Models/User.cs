@@ -11,6 +11,8 @@
         public bool IsEmailVerified { get; set; }
         public string? EmailVerificationToken { get; set; }
         public DateTime? EmailVerificationTokenExpiry { get; set; }
+        public string? PasswordResetToken { get; set; }
+        public DateTime? PasswordResetTokenExpiry { get; set; }
 
         public ICollection<Role> Roles { get; set; }
         public int FailedLoginAttempts { get; set; }

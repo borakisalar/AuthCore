@@ -29,7 +29,7 @@ namespace StajBackendProject.Implements
 
                 var bodyBuilder = new BodyBuilder
                 {
-                    HtmlBody = $"<h3>Hello!</h3><p>{message}</p><br><p><b>Staj Backend Team</b></p>",
+                    HtmlBody = $"<p>{message}</p>",
                     TextBody = message
                 };
 

@@ -77,6 +77,31 @@ namespace StajBackendProject.Controllers
             return Ok(new { Message = "Email address successfully updated." });
         }
 
+        // POST: api/auth/forgot-password
+        [HttpPost("forgot-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto request)
+        {
+            await _userService.ForgotPasswordAsync(request.Email);
+
+            return Ok(new { Message = "If there is an active account registered with this email address in our system, a password reset link has been sent." });
+        }
+
+        // POST: api/auth/reset-password
+        [HttpPost("reset-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto request)
+        {
+            var success = await _userService.ResetPasswordAsync(request);
+
+            if (!success)
+            {
+                return BadRequest(new { Message = "Invalid or expired reset token." });
+            }
+
+            return Ok(new { Message = "Your password has been successfully reset. You can log in with your new password." });
+        }
+
         // POST : api/auth/change-password
         [HttpPost("change-password")]
         [Authorize]
@@ -167,17 +192,17 @@ namespace StajBackendProject.Controllers
         {
             if (string.IsNullOrWhiteSpace(token))
             {
-                return BadRequest(new { Message = "Doğrulama tokenı zorunludur." });
+                return BadRequest(new { Message = "A verification token is required." });
             }
 
             var isSuccess = await _userService.VerifyEmailAsync(token);
 
             if (!isSuccess)
             {
-                return BadRequest(new { Message = "Geçersiz veya süresi dolmuş doğrulama bağlantısı!" });
+                return BadRequest(new { Message = "Invalid or expired verification link!" });
             }
 
-            return Ok(new { Message = "E-posta adresiniz başarıyla doğrulandı! Artık giriş yapabilirsiniz." });
+            return Ok(new { Message = "Your email address has been successfully verified! You can now log in." });
         }
     }
 }

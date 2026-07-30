@@ -167,6 +167,12 @@ namespace StajBackendProject.Migrations
                     b.Property<DateTime?>("PasswordLastChangedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("PasswordResetToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("PasswordResetTokenExpiry")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 

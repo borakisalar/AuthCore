@@ -23,5 +23,7 @@ namespace StajBackendProject.Interfaces
         Task<bool> LogoutSessionAsync(string refreshToken);
         Task<UserSession?> GetCurrentSessionAsync(string refreshToken);
         Task<bool> VerifyEmailAsync(string token);
+        Task<bool> ForgotPasswordAsync(string email);
+        Task<bool> ResetPasswordAsync(ResetPasswordDto request);
     }
 }

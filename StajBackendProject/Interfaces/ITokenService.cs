@@ -9,5 +9,6 @@ namespace StajBackendProject.Interfaces
         string GenerateRefreshToken();
         TokenResponseDto RefreshToken(RefreshTokenRequestDto request);
         string GenerateEmailVerificationToken();
+        string GeneratePasswordResetToken();
     }
 }
