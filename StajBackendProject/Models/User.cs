@@ -8,6 +8,10 @@
         public string Email { get; set; }
         public string PasswordHash { get; set; }
         public bool IsActive { get; set; }
+        public bool IsEmailVerified { get; set; }
+        public string? EmailVerificationToken { get; set; }
+        public DateTime? EmailVerificationTokenExpiry { get; set; }
+
         public ICollection<Role> Roles { get; set; }
         public int FailedLoginAttempts { get; set; }
         public DateTime? LockoutEnd { get; set; }
@@ -19,10 +23,3 @@
         public ICollection<UserSession> Sessions { get; set; } = new List<UserSession>();
     }
 }
-
-
-
-
-
-
-

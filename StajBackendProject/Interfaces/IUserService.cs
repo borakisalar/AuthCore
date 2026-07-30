@@ -22,5 +22,6 @@ namespace StajBackendProject.Interfaces
         Task<bool> RevokeSessionAsync(int userId, int sessionId);
         Task<bool> LogoutSessionAsync(string refreshToken);
         Task<UserSession?> GetCurrentSessionAsync(string refreshToken);
+        Task<bool> VerifyEmailAsync(string token);
     }
 }

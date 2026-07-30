@@ -159,5 +159,25 @@ namespace StajBackendProject.Controllers
             if (!success) return NotFound(new { Message = "Session not found or already cancelled." });
             return Ok(new { Message = "Session was successfully terminated." });
         }
+
+        // GET: api/auth/verify-email?token=3F4B9A8C1D...
+        [HttpGet("verify-email")]
+        [AllowAnonymous]
+        public async Task<IActionResult> VerifyEmail([FromQuery] string token)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return BadRequest(new { Message = "Doğrulama tokenı zorunludur." });
+            }
+
+            var isSuccess = await _userService.VerifyEmailAsync(token);
+
+            if (!isSuccess)
+            {
+                return BadRequest(new { Message = "Geçersiz veya süresi dolmuş doğrulama bağlantısı!" });
+            }
+
+            return Ok(new { Message = "E-posta adresiniz başarıyla doğrulandı! Artık giriş yapabilirsiniz." });
+        }
     }
 }

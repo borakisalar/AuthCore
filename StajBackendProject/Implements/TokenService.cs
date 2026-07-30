@@ -95,5 +95,13 @@ namespace StajBackendProject.Implements
                 RefreshToken = newRefreshToken
             };
         }
+
+        public string GenerateEmailVerificationToken()
+        {
+            var randomNumber = new byte[32];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomNumber);
+            return Convert.ToHexString(randomNumber);
+        }
     }
 }
