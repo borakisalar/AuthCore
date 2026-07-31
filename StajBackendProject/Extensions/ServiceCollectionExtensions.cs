@@ -3,7 +3,6 @@ using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using StajBackendProject.Implements;
@@ -25,7 +24,7 @@ namespace StajBackendProject.Extensions
 
             services.AddStackExchangeRedisCache(options =>
             {
-                options.Configuration = "localhost:6379";
+                options.Configuration = configuration["Redis:Configuration"] ?? "localhost:6379";
                 options.InstanceName = "StajProject_";
             });
 
