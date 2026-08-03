@@ -18,13 +18,15 @@ namespace StajBackendProject.Tests.Controllers
     {
         private readonly Mock<IUserService> _mockUserService;
         private readonly Mock<ITokenService> _mockTokenService;
+        private readonly Mock<IMfaService> _mockMfaService;
         private readonly AuthController _controller;
 
         public AuthControllerTests()
         {
             _mockUserService = new Mock<IUserService>();
             _mockTokenService = new Mock<ITokenService>();
-            _controller = new AuthController(_mockUserService.Object, _mockTokenService.Object);
+            _mockMfaService = new Mock<IMfaService>();
+            _controller = new AuthController(_mockUserService.Object, _mockTokenService.Object, _mockMfaService.Object);
         }
 
         private void SetupHttpContext(string nameIdentifier = "1", string ipAddress = "127.0.0.1", string userAgent = "TestAgent")

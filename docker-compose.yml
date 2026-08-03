@@ -7,7 +7,7 @@ services:
     user: "0:0"
     environment:
       - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=SuperSecretPass123! # Güçlü bir SA şifresi
+      - MSSQL_SA_PASSWORD=SuperSecretPass123!
     ports:
       - "1433:1433"
     volumes:
@@ -38,6 +38,10 @@ services:
       - ConnectionStrings__UsersContext=Server=sqlserver,1433;Database=Users;User Id=sa;Password=SuperSecretPass123!;TrustServerCertificate=True;
       - ConnectionStrings__AdventureWorksConnection=Server=sqlserver,1433;Database=AdventureWorks2022;User Id=sa;Password=SuperSecretPass123!;TrustServerCertificate=True;
       - Redis__Configuration=redis:6379
+      - EmailSettings__SmtpServer=smtp.gmail.com
+      - EmailSettings__SmtpPort=587
+      - EmailSettings__SenderEmail=${EMAIL}
+      - EmailSettings__SenderPassword=${EMAIL_PASSWORD}
     networks:
       - staj-network
 

@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -43,6 +43,7 @@ namespace StajBackendProject.Extensions
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IRoleService, RoleService>();
             services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<IMfaService, MfaService>();
 
             services.AddScoped<IAdventureWorksService, AdventureWorksService>();
 

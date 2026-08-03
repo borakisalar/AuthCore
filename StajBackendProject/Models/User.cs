@@ -1,4 +1,4 @@
-﻿namespace StajBackendProject.Models
+namespace StajBackendProject.Models
 {
     public class User
     {
@@ -25,6 +25,11 @@
         public DateTime? PasswordLastChangedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
+        public bool MfaEnabled { get; set; }
+        public string? MfaSecret { get; set; }
+        public string? MfaRecoveryCodes { get; set; }
+        public string? MfaSetupEmailCode { get; set; }
+        public DateTime? MfaSetupEmailCodeExpiry { get; set; }
         public ICollection<UserSession> Sessions { get; set; } = new List<UserSession>();
     }
 }

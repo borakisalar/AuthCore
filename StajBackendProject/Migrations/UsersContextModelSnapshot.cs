@@ -166,6 +166,21 @@ namespace StajBackendProject.Migrations
                     b.Property<DateTime?>("LockoutEnd")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("MfaEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MfaRecoveryCodes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MfaSecret")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MfaSetupEmailCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("MfaSetupEmailCodeExpiry")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
