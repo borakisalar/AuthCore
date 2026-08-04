@@ -25,7 +25,6 @@ namespace StajBackendProject.Implements
             if (!user.IsEmailVerified)
                 throw new Exception("MFA cannot be enabled for an unverified email address.");
 
-            // Generate 6 digit random code
             var random = new Random();
             var code = random.Next(100000, 999999).ToString();
 
@@ -48,7 +47,6 @@ namespace StajBackendProject.Implements
             if (user.MfaSetupEmailCode != request.EmailCode || user.MfaSetupEmailCodeExpiry < DateTime.UtcNow)
                 throw new Exception("Invalid or expired email verification code.");
 
-            // Clear the code so it can't be reused
             user.MfaSetupEmailCode = null;
             user.MfaSetupEmailCodeExpiry = null;
 
