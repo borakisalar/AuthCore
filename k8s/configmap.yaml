@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: staj-config
+data:
+  ASPNETCORE_ENVIRONMENT: "Development"
+  ConnectionStrings__UsersContext: "Server=sqlserver-service,1433;Database=Users;User Id=sa;Password=SuperSecretPass123!;TrustServerCertificate=True;"
+  ConnectionStrings__AdventureWorksConnection: "Server=sqlserver-service,1433;Database=AdventureWorks2022;User Id=sa;Password=SuperSecretPass123!;TrustServerCertificate=True;"
+  Redis__Configuration: "redis-service:6379"
+  EmailSettings__SmtpServer: "smtp.gmail.com"
+  EmailSettings__SmtpPort: "587"
