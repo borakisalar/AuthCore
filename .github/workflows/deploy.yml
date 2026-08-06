@@ -42,7 +42,8 @@ jobs:
       - name: Compile the image ang push it to Docker Hub
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./StajBackendProject
+          file: ./StajBackendProject/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/staj-api:latest
 
