@@ -2,16 +2,16 @@ version: '3.8'
 
 services:
   sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: mcr.microsoft.com/azure-sql-edge:latest
     container_name: staj-sqlserver
     user: "0:0"
     environment:
       - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=SuperSecretPass123!
+      - MSSQL_SA_PASSWORD=${DB_PASSWORD}
     ports:
       - "1433:1433"
     volumes:
-      - sqldata:/var/opt/mssql/data  
+      - sqldata:/var/opt/mssql/data
     networks:
       - staj-network
 
@@ -24,19 +24,17 @@ services:
       - staj-network
 
   api:
-    build:
-      context: ./StajBackendProject
-      dockerfile: Dockerfile
+    image: borakisalar/staj-api:latest
     container_name: staj-api
     depends_on:
       - sqlserver
       - redis
     ports:
-      - "8080:8080"
+      - "80:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__UsersContext=Server=sqlserver,1433;Database=Users;User Id=sa;Password=SuperSecretPass123!;TrustServerCertificate=True;
-      - ConnectionStrings__AdventureWorksConnection=Server=sqlserver,1433;Database=AdventureWorks2022;User Id=sa;Password=SuperSecretPass123!;TrustServerCertificate=True;
+      - ConnectionStrings__UsersContext=Server=sqlserver,1433;Database=Users;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True;
+      - ConnectionStrings__AdventureWorksConnection=Server=sqlserver,1433;Database=AdventureWorks2022;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True;
       - Redis__Configuration=redis:6379
       - EmailSettings__SmtpServer=smtp.gmail.com
       - EmailSettings__SmtpPort=587

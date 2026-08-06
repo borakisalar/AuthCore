@@ -1,0 +1,63 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: .NET 8 Setup
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install Dependencies
+        run: dotnet restore
+
+      - name: Build Project
+        run: dotnet build --no-restore
+
+      - name: Run Unit Tests
+        run: dotnet test --no-build --verbosity normal
+
+  docker-build-and-push:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Compile the image ang push it to Docker Hub
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/staj-api:latest
+
+  deploy-to-server:
+    needs: docker-build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Connect to server with SSH and Refresh Containers
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd staj-project
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/staj-api:latest
+            sudo docker compose down
+            sudo docker compose up -d
