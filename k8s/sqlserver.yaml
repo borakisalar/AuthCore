@@ -34,7 +34,7 @@ spec:
             - name: MSSQL_SA_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: staj-secrets
+                  name: authcore-secrets
                   key: MSSQL_SA_PASSWORD
           volumeMounts:
             - name: sqldata

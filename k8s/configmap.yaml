@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: staj-config
+  name: authcore-config
 data:
   ASPNETCORE_ENVIRONMENT: "Development"
   ConnectionStrings__UsersContext: "Server=sqlserver-service,1433;Database=Users;User Id=sa;Password=SuperSecretPass123!;TrustServerCertificate=True;"

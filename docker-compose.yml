@@ -3,7 +3,7 @@ version: '3.8'
 services:
   sqlserver:
     image: mcr.microsoft.com/azure-sql-edge:latest
-    container_name: staj-sqlserver
+    container_name: authcore-sqlserver
     user: "0:0"
     environment:
       - ACCEPT_EULA=Y
@@ -13,19 +13,19 @@ services:
     volumes:
       - sqldata:/var/opt/mssql/data
     networks:
-      - staj-network
+      - authcore-network
 
   redis:
     image: redis:latest
-    container_name: staj-redis
+    container_name: authcore-redis
     ports:
       - "6379:6379"
     networks:
-      - staj-network
+      - authcore-network
 
   api:
-    image: borakisalar/staj-api:latest
-    container_name: staj-api
+    image: borakisalar/authcore-api:latest
+    container_name: authcore-api
     depends_on:
       - sqlserver
       - redis
@@ -41,10 +41,10 @@ services:
       - EmailSettings__SenderEmail=${EMAIL}
       - EmailSettings__SenderPassword=${EMAIL_PASSWORD}
     networks:
-      - staj-network
+      - authcore-network
 
 networks:
-  staj-network:
+  authcore-network:
     driver: bridge
 volumes:
   sqldata:

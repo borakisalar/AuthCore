@@ -14,22 +14,22 @@ spec:
     spec:
       containers:
         - name: api
-          image: borakisalar/staj-api:latest
+          image: borakisalar/authcore-api:latest
           ports:
             - containerPort: 8080
           envFrom:
             - configMapRef:
-                name: staj-config
+                name: authcore-config
           env:
             - name: EmailSettings__SenderEmail
               valueFrom:
                 secretKeyRef:
-                  name: staj-secrets
+                  name: authcore-secrets
                   key: EMAIL
             - name: EmailSettings__SenderPassword
               valueFrom:
                 secretKeyRef:
-                  name: staj-secrets
+                  name: authcore-secrets
                   key: EMAIL_PASSWORD
 ---
 apiVersion: v1

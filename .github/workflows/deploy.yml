@@ -42,10 +42,10 @@ jobs:
       - name: Compile the image ang push it to Docker Hub
         uses: docker/build-push-action@v5
         with:
-          context: ./StajBackendProject
-          file: ./StajBackendProject/Dockerfile
+          context: ./AuthCore
+          file: ./AuthCore/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/staj-api:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/authcore-api:latest
 
   deploy-to-server:
     needs: docker-build-and-push
@@ -58,7 +58,7 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            cd staj-project
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/staj-api:latest
+            cd authcore
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/authcore-api:latest
             sudo docker compose down
             sudo docker compose up -d
